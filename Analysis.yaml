@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: node-health-check
+spec:
+  metrics:
+  - name: health-check
+    interval: 30s
+    count: 3
+    successCondition: result == 200
+    failureLimit: 1
+    provider:
+      web:
+        url: http://node-service-canary/health

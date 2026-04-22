@@ -1,0 +1,63 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: node-app
+spec:
+  replicas: 2
+  revisionHistoryLimit: 10
+
+  selector:
+    matchLabels:
+      app: node
+
+  template:
+    metadata:
+      labels:
+        app: node
+    spec:
+      containers:
+      - name: node-container
+        image: anushkashukla003/node-app:b7f97cc233ec1d3fab15f0ee43fa266ab24cb8da
+        ports:
+        - containerPort: 3000
+
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 2
+
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          failureThreshold: 3
+
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          failureThreshold: 10
+          periodSeconds: 3
+
+  strategy:
+    canary:
+      canaryService: node-service-canary
+      stableService: node-service-stable
+
+      analysis:
+        templates:
+        - templateName: node-health-check
+
+      steps:
+        - setWeight: 20
+        - pause: { duration: 60 }
+
+        - setWeight: 50
+        - pause: { duration: 60 }
+
+        - setWeight: 100
