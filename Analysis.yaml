@@ -2,13 +2,14 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: node-health-check
+  namespace: argocd
 spec:
   metrics:
   - name: health-check
-    interval: 30s
+    interval: 20s
     count: 3
     successCondition: result == 200
     failureLimit: 1
     provider:
       web:
-        url: http://node-service-canary/health
+        url: http://node-service-canary.argocd/health
