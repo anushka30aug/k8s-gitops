@@ -2,13 +2,13 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: node-ingress
+  namespace: argocd
   annotations:
-    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
-  - host: your-app.com
-    http:
+  - http:
       paths:
       - path: /
         pathType: Prefix
