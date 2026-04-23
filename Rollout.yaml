@@ -5,11 +5,10 @@ metadata:
   namespace: argocd
 spec:
   replicas: 2
-
+  progressDeadlineSeconds: 60
   selector:
     matchLabels:
       app: node
-
   template:
     metadata:
       labels:
@@ -17,29 +16,28 @@ spec:
     spec:
       containers:
       - name: node-container
-        image: anushkashukla003/node-app:76ed89697f851a8a4edf91408aaa83bc6474c23c
+        image: anushkashukla003/node-app:76ed89697f851a8a4edf91408aaa83bc6474c23c        
         ports:
         - containerPort: 3000
-
         readinessProbe:
           httpGet:
             path: /health
             port: 3000
-
+          periodSeconds: 10
+          failureThreshold: 5
+          timeoutSeconds: 2
   strategy:
     canary:
       canaryService: node-service-canary
       stableService: node-service-stable
-
       analysis:
         templates:
         - templateName: node-health-check
-
       steps:
-        - setWeight: 20
-        - pause: { duration: 30 }
-
-        - setWeight: 50
-        - pause: { duration: 30 }
-
-        - setWeight: 100
+      - setWeight: 20
+      - pause:
+          duration: 30s
+      - setWeight: 50
+      - pause:
+          duration: 30s
+      - setWeight: 100
