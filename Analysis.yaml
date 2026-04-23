@@ -12,4 +12,4 @@ spec:
     failureLimit: 1
     provider:
       web:
-        url: http://node-service-canary.argocd.svc.cluster.local/health
+        url: "http://node-service-canary.argocd.svc.cluster.local/health"
