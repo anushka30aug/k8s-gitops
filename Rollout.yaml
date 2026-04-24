@@ -5,7 +5,7 @@ metadata:
   namespace: argocd
 spec:
   replicas: 2
-  progressDeadlineSeconds: 60
+  progressDeadlineSeconds: 120   # Increased — 60s is too tight for probe cycles
   selector:
     matchLabels:
       app: node
@@ -21,10 +21,12 @@ spec:
         - containerPort: 3000
         readinessProbe:
           httpGet:
-            path: /
+            path: /health    # ← probe the same path as analysis; avoids split-brain
             port: 3000
+          initialDelaySeconds: 10
           periodSeconds: 10
-          failureThreshold: 5
+          failureThreshold: 3
+          successThreshold: 1
           timeoutSeconds: 2
   strategy:
     canary:
@@ -32,11 +34,18 @@ spec:
       stableService: node-service-stable
       steps:
       - setWeight: 20
+      # ── Step order matters ────────────────────────────────────────────────
+      # Pause first so the readiness probe has time to run.
+      # If the pod never becomes ready, the Rollout stays Progressing
+      # and never advances to the analysis step.
+      - pause:
+          duration: 40s      # ≥ failureThreshold × periodSeconds (3×10=30s)
+      # Analysis runs AFTER the pause, so we know endpoints are either
+      # present (pod ready) or absent (pod failing readiness — analysis
+      # gate 1 will catch it).
       - analysis:
           templates:
           - templateName: node-health-check
-      - pause:
-          duration: 30s
       - setWeight: 50
       - pause:
           duration: 30s
