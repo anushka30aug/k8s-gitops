@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: node-container
-        image: anushkashukla003/node-app:8e34fe298f2de4611c93b48597a90c1cd6dbefa4
+        image: anushkashukla003/node-app:fd88ad1114cfe2a50c5b0d55b730be0e30efcf39
         ports:
         - containerPort: 3000
         readinessProbe:
