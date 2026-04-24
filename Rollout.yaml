@@ -30,11 +30,11 @@ spec:
     canary:
       canaryService: node-service-canary
       stableService: node-service-stable
-      analysis:
-        templates:
-        - templateName: node-health-check
       steps:
       - setWeight: 20
+      - analysis:
+          templates:
+          - templateName: node-health-check
       - pause:
           duration: 30s
       - setWeight: 50
