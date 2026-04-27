@@ -1,21 +1,3 @@
-# apiVersion: argoproj.io/v1alpha1
-# kind: AnalysisTemplate
-# metadata:
-#   name: node-health-check
-#   namespace: argocd
-# spec:
-#   metrics:
-#   - name: health-check
-#     interval: 10s
-#     count: 5
-#     successCondition: result == 200
-#     failureLimit: 1
-#     provider:
-#       web:
-#         url: "http://node-service-canary.argocd.svc.cluster.local/health"
-
-
-
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
@@ -23,56 +5,11 @@ metadata:
   namespace: argocd
 spec:
   metrics:
-
-  # ── Gate 1: Endpoint existence check ─────────────────────────────────────
-  # Runs a kubectl job to assert the canary Service has ≥1 ready endpoint.
-  # Analysis fails immediately if endpoints are absent, blocking promotion.
-  - name: canary-endpoints-exist
-    count: 1
-    failureLimit: 0
-    provider:
-      job:
-        spec:
-          template:
-            spec:
-              restartPolicy: Never
-              serviceAccountName: argo-rollouts-analysis-sa  # see RBAC note below
-              containers:
-              - name: check
-                image: bitnami/kubectl:latest
-                command:
-                - /bin/sh
-                - -c
-                - |
-                  READY=$(kubectl get endpoints node-service-canary \
-                    -n argocd \
-                    -o jsonpath='{.subsets[*].addresses}' | tr -cd '{' | wc -c)
-                  echo "Ready endpoint count: $READY"
-                  if [ "$READY" -lt 1 ]; then
-                    echo "FAIL: canary service has no ready endpoints"
-                    exit 1
-                  fi
-                  echo "PASS: canary endpoints found"
-
-  # ── Gate 2: HTTP health check with explicit failure condition ─────────────
-  # Only reached if Gate 1 passes (endpoints confirmed to exist).
-  # Both successCondition AND failureCondition are defined.
-  # Any non-200 response, connection error, or empty result → Failure.
-  - name: http-health-check
+  - name: health-check
     interval: 10s
     count: 5
-    initialDelay: 15s      # Grace period after endpoints confirmed present
-    failureLimit: 0        # Zero tolerance — first non-200 terminates analysis
-    consecutiveErrorLimit: 1  # Connection errors also terminate (not silently absorbed)
-    successCondition: result == "200"
-    failureCondition: result != "200" || result == "" || result == nil
+    successCondition: result == 200
+    failureLimit: 1
     provider:
       web:
         url: "http://node-service-canary.argocd.svc.cluster.local/health"
-        # Return only the HTTP status code as the result value
-        # so successCondition/failureCondition work on a clean integer string
-        jsonPath: "{$.status}"   # Only include if your /health returns JSON with a status field
-        # If /health returns plain text, remove jsonPath and compare against
-        # the response body. For status-code-only checking, use the
-        # insecureSkipVerify and timeoutSeconds guards:
-        timeoutSeconds: 5

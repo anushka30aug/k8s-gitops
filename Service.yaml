@@ -6,9 +6,6 @@ metadata:
 spec:
   selector:
     app: node
-    # Argo Rollouts will inject rollouts-pod-template-hash at runtime.
-    # Do NOT pre-populate it here — Argo manages it.
-    # Do NOT add any selector that would match canary pods.
   ports:
   - port: 80
     targetPort: 3000
@@ -21,11 +18,6 @@ metadata:
 spec:
   selector:
     app: node
-    # Same note — Argo injects the canary hash here automatically.
-    # The selector starts identical; Argo mutates it post-creation
-    # to add rollouts-pod-template-hash=<canary-hash>.
-    # If you observe selector bleed, check that no Rollout reconcile
-    # loop is resetting the selector back to the broad form.
   ports:
   - port: 80
     targetPort: 3000
