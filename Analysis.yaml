@@ -8,7 +8,8 @@ spec:
   - name: health-check
     interval: 10s
     count: 5
-    successCondition: result == 200
+    successCondition: result == "200"
+    failureCondition: result != "200" || result == "" || result == nil
     failureLimit: 1
     provider:
       web:
