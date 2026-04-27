@@ -6,6 +6,7 @@ metadata:
 spec:
   replicas: 2
   progressDeadlineSeconds: 60
+  progressDeadlineAbort: true
   selector:
     matchLabels:
       app: node
